@@ -16,11 +16,16 @@ contract Lottery {
 
     function enter() public {
         // $1 dollar minimum
-        
+
         players.push(msg.sender);
     }
     function getEntranceFee() public view returns (uint256) {
-        (,int256 price, , , ,) = ethUsdPriceFeed.latestRoundData;
+        // skipping safe math for now
+        (, int256 price, , , ,) = ethUsdPriceFeed.latestRoundData;
+        uint256 adjustedPrice = uint256(price) * 10**10;
+
+        uint256 costToEnter = (usdEntryFee * 10 ** 18) / price;
+        return costToEnter;
 
     }
 
