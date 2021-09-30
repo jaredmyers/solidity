@@ -2,7 +2,7 @@
 2. Admin will choose when lottery is over
 3. The lottery will select random winner
 
-testing
+testing methods:
 1. mainnet-fork
 2. development with mocks
 3. testnet
