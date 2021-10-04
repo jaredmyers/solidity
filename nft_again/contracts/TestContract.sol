@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.0;
+pragma solidity ^0.6.0;
 
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
@@ -15,7 +15,7 @@ contract TestContract is ERC721, Ownable {
     address payable private a1;
     bool public isSaleActive;
 
-    constructor() ERC721
+    constructor() public ERC721
     (
         "The Dudez", "DUDE"
     )
@@ -23,13 +23,8 @@ contract TestContract is ERC721, Ownable {
         isSaleActive = false;
     }
 
-
-    function _baseURI() internal view virtual override returns (string memory) {
-        return baseTokenURI;
-    }
-
     function setBaseURI(string memory baseURI) public onlyOwner {
-        baseTokenURI = baseURI;
+        _setBaseURI(baseURI);
     }
     
     function mintDudez(uint256 quantity) 
@@ -52,13 +47,17 @@ contract TestContract is ERC721, Ownable {
 
     }
     
+    // testing setting addresses for withdraw, will become array
     function setAddresses(address payable a) public onlyOwner{
         a1 = a;
     }
+
     function setSale(bool sale) public onlyOwner{
         isSaleActive = sale;
     }
     
+    // testing manual payment splitting before playing with library
+    // establishing withdraws
     function withdraw() public payable onlyOwner {
         require(payable(a1).send(address(this).balance));
         //require(payable(a2).send(address(this).balance * 50/100));
