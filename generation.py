@@ -1,3 +1,4 @@
+
 '''
 Art Generation
 
@@ -14,11 +15,14 @@ from reportlab.graphics import renderPM
 from PIL import Image
 import random
 import collections
+import json
 
 # - Paths -
 completed_art = '/Users/ice/Desktop/nft_stuff/art/'
 metadata = '/Users/ice/Desktop/nft_stuff/metadata/'
 tmp = '/Users/ice/Desktop/nft_stuff/tmp/'
+
+metadata_template = '/Users/ice/Desktop/nft_stuff/data_template.json'
 
 attr_root = '/Users/ice/Desktop/nft_stuff/attributes/'
 base_root = attr_root + 'base/'
@@ -42,7 +46,37 @@ filenames_dict = {'base_filenames': os.listdir(base_root),
     'swords_filenames': os.listdir(swords_root)
     }
 
-print(filenames_dict)
+
+def output_metadata(selected_attrs, token_id):
+    '''create the metadata for the corresponding nft'''
+    # mandatory attrs: ['base_filenames', 'eyes_filenames', 'mouth_filenames', 'eyebrows_filenames']
+    # random attrs: ['headgear_filenames', 'scars_filenames', 'tattoo_filenames', 'glasses_filenames', 'swords_filenames']
+
+    # load up template
+    with open(metadata_template, 'r') as file:
+        template = json.load(file)
+
+    template['name'] = f'BosomBuddy #{token_id}'
+    template['tokenId'] = int(token_id)
+
+    # mandatory first
+    template['attributes'][0]['trait_type'] = 'Body'
+    template['attributes'][0]['value'] = selected_attrs['base_filenames'].split('.')[0]
+
+    template['attributes'].append({'trait_type': 'Eyes', 'value': selected_attrs['eyes_filenames'].split('.')[0]})
+    template['attributes'].append({'trait_type': 'Mouth', 'value': selected_attrs['mouth_filenames'].split('.')[0]})
+    template['attributes'].append({'trait_type': 'EyeBrows', 'value': selected_attrs['eyebrows_filenames'].split('.')[0]})
+
+    mandatory = ['base_filenames', 'eyes_filenames', 'mouth_filenames', 'eyebrows_filenames']
+
+    for key in selected_attrs:
+        if key not in mandatory:
+            category = key.split('_')[0].capitalize()
+            template['attributes'].append({'trait_type': category, 'value': selected_attrs[key].split('.')[0]})
+    
+    with open(metadata + token_id, 'w') as file:
+        json.dump(template, file)
+
 
 def use_svg(selected_attrs, filename):
     '''
@@ -85,13 +119,11 @@ def use_svg(selected_attrs, filename):
     # Save new merged SVG image
     base_template.save(completed_art+filename)
 
-def convert_to_png(fullpath):
-    drawing = svg2rlg(fullpath)
-    fullpath = fullpath.split('/')
-    filename = fullpath[-1].split('.')[0]
-    renderPM.drawToFile(drawing, tmp+filename+'.png', fmt='PNG')
+    truncate_ext = filename.split('.')
+    token_id = truncate_ext[0]
+    output_metadata(selected_attrs, token_id)
 
-    
+
 # Main Entry #
 '''
 SWORDS, BASE, SCARS, TATTOOS, EYEBROWS, MOUTH, EYES, GLASSES, HEADGEAR
@@ -120,8 +152,6 @@ while count <= desired_amount:
 
         rando_idx = random.randint(0, len(filenames_dict[selected_category])-1)
         selected_attrs[selected_category] = filenames_dict[selected_category][rando_idx]
-
-    print(selected_attrs)
 
     # puttinng selections in tmp for duplicate comparison
     tmp = []
